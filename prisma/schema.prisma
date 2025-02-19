@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant{
+  id String @id @default(uuid())
+  name String
+  slug String
+  description String
+  avatarImageUrl String
+  coverImageUrl String
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  //preciso criar uma lista que não será salva no banco mas para relacionar as tabelas
+  menuCategories MenuCategory[]
+  products Product[]
+  order Order[]
+
+}
+
+model MenuCategory{
+  id String @id @default(uuid())
+  //necessário para indicar a foreign key
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+  name String
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  products Product[]
+
+}
+
+model Product{
+  id String @id @default(uuid())
+  name String
+  description String
+  price Float
+  imageUrl String
+  igredients String[]
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+  menuCategory MenuCategory @relation(fields: [menuCategoryId], references: [id])
+  menuCategoryId String
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  products OrderProduct[]
+}
+
+model Order{
+  id Int @id @default(autoincrement())
+  total Float
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  restaurantId String
+  status OrderStatus
+  consumptionMethod ConsumptionMethod
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  orderProduct OrderProduct[]
+}
+
+model OrderProduct{
+  id String @id @default(uuid())
+  product Product @relation(fields: [productId], references: [id])
+  productId String
+  order Order @relation(fields: [orderId], references: [id])
+  orderId Int
+  quantity Int
+  price Float
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+//enum é um conunto de valores, por convenção usar valores em maiusculas e em inglês
+enum OrderStatus{
+  PENDING
+  IN_PREPARATION
+  FINISHED
+}
+
+enum ConsumptionMethod{
+  TAKEAWAY
+  DINE_IN
+}
