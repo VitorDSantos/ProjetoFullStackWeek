@@ -13,82 +13,77 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Restaurant{
-  id String @id @default(uuid())
-  name String
-  slug String
-  description String
+model Restaurant {
+  id             String         @id @default(uuid())
+  name           String
+  slug           String         @unique
+  description    String
   avatarImageUrl String
-  coverImageUrl String
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-  //preciso criar uma lista que não será salva no banco mas para relacionar as tabelas
+  coverImageUrl  String
   menuCategories MenuCategory[]
-  products Product[]
-  order Order[]
-
+  products       Product[]
+  orders         Order[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
-model MenuCategory{
-  id String @id @default(uuid())
-  //necessário para indicar a foreign key
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+model MenuCategory {
+  id           String     @id @default(uuid())
+  name         String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   restaurantId String
-  name String
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-  products Product[]
-
+  products     Product[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
-model Product{
-  id String @id @default(uuid())
-  name String
-  description String
-  price Float
-  imageUrl String
-  igredients String[]
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
-  restaurantId String
-  menuCategory MenuCategory @relation(fields: [menuCategoryId], references: [id])
+model Product {
+  id             String         @id @default(uuid())
+  name           String
+  description    String
+  price          Float
+  imageUrl       String
+  ingredients    String[]
+  orderProducts  OrderProduct[]
+  restaurant     Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId   String
+  menuCategory   MenuCategory   @relation(fields: [menuCategoryId], references: [id], onDelete: Cascade)
   menuCategoryId String
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-  products OrderProduct[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
-model Order{
-  id Int @id @default(autoincrement())
-  total Float
-  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
-  restaurantId String
-  status OrderStatus
+model Order {
+  id                Int               @id @default(autoincrement())
+  total             Float
+  status            OrderStatus
   consumptionMethod ConsumptionMethod
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-  orderProduct OrderProduct[]
+  restaurant        Restaurant        @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  restaurantId      String
+  orderProducts     OrderProduct[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
-model OrderProduct{
-  id String @id @default(uuid())
-  product Product @relation(fields: [productId], references: [id])
+model OrderProduct {
+  id        String   @id @default(uuid())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   productId String
-  order Order @relation(fields: [orderId], references: [id])
-  orderId Int
-  quantity Int
-  price Float
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-//enum é um conunto de valores, por convenção usar valores em maiusculas e em inglês
-enum OrderStatus{
+enum OrderStatus {
   PENDING
   IN_PREPARATION
   FINISHED
 }
 
-enum ConsumptionMethod{
+enum ConsumptionMethod {
   TAKEAWAY
   DINE_IN
 }
